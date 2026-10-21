@@ -32,7 +32,7 @@ struct FindReplaceSheet: View {
                 optionsSection
                 outcomeSection
             }
-            .navigationTitle(title)
+            .navigationTitle("Find & Replace")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -47,10 +47,10 @@ struct FindReplaceSheet: View {
         }
     }
 
-    private var title: String {
+    private var scope: String {
         model.noteIDs.isEmpty
-            ? String(localized: "Find & Replace")
-            : String(localized: "Find & Replace in \(model.noteIDs.count) selected")
+            ? String(localized: "Applies to every note in the collection.")
+            : String(localized: "Applies to \(model.noteIDs.count) selected notes.")
     }
 
     private var inputSection: some View {
@@ -62,6 +62,8 @@ struct FindReplaceSheet: View {
             TextField("Replace With", text: $model.replacement)
                 .autocorrectionDisabled()
                 .textInputAutocapitalization(.never)
+        } footer: {
+            Text(scope)
         }
     }
 

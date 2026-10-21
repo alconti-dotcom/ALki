@@ -88,7 +88,7 @@ struct FindReplaceModelTests {
     }
 
     @Test func failureSurfacesMessageAndNoUndo() async {
-        struct Boom: LocalizedError { var errorDescription: String? { "bad regex" } }
+        struct Boom: LocalizedError { var errorDescription: String? { "<pre>bad regex\n</pre>" } }
         let model = makeModel(ids: [], calls: Calls(), result: .failure(Boom()))
         model.find = "("
         await model.apply()

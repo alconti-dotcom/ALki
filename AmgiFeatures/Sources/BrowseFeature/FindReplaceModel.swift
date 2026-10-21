@@ -61,7 +61,11 @@ final class FindReplaceModel {
             outcome = .updated(count)
             canUndo = count > 0
         } catch {
-            outcome = .failed(error.localizedDescription)
+            // The engine wraps regex parse errors in <pre> tags.
+            let message = error.localizedDescription
+                .replacing(/<\/?pre>/, with: "")
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+            outcome = .failed(message)
             canUndo = false
         }
     }
