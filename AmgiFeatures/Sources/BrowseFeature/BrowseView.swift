@@ -61,6 +61,7 @@ package struct BrowseView: View {
             .navigationTitle("Browse")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { toolbarContent }
+            .toolbarVisibility(selectionState.isSelectMode ? .hidden : .automatic, for: .tabBar)
             .navigationDestination(item: $pendingTool) { tool in
                 switch tool {
                 case .duplicates: DuplicatesView()
