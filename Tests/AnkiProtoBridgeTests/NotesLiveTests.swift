@@ -100,13 +100,26 @@ import AnkiKit
         }
     }
 
+    @Test func findAndReplace_literalDollarReplacementWithEscape() throws {
+        try withScratchCollection("notes-find-replace-dollar") { backend, _ in
+            let id = try addBasicNote(backend, front: "price", back: "x")
+            _ = try backend.invoke(.findAndReplace(
+                noteIds: [id], search: "price", replacement: "$$5",
+                regex: false, matchCase: false, fieldName: "Front"
+            ))
+            #expect(try backend.invoke(.getNote(id: id)).flds == "$5\(Self.separator)x")
+        }
+    }
+
     @Test func findAndReplace_invalidRegexThrows() throws {
         try withScratchCollection("notes-find-replace-bad") { backend, _ in
             _ = try addBasicNote(backend, front: "cat", back: "x")
-            #expect(throws: (any Error).self) {
+            #expect {
                 try backend.invoke(.findAndReplace(
                     noteIds: [], search: "(", replacement: "", regex: true, matchCase: false, fieldName: ""
                 ))
+            } throws: { error in
+                (error as? BackendError)?.message.hasPrefix("<pre>") == true
             }
         }
     }

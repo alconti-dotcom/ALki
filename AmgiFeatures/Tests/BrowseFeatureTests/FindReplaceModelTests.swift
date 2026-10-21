@@ -79,6 +79,17 @@ struct FindReplaceModelTests {
         #expect(model.canUndo)
     }
 
+    @Test func replacementDollarsAreLiteralUnlessRegex() async {
+        let calls = Calls()
+        let model = makeModel(ids: [], calls: calls)
+        model.find = "price"
+        model.replacement = "$5 ${1}"
+        await model.apply()
+        model.useRegex = true
+        await model.apply()
+        #expect(calls.args.map(\.replacement) == ["$$5 $${1}", "$5 ${1}"])
+    }
+
     @Test func zeroMatchesOffersNoUndo() async {
         let model = makeModel(ids: [], calls: Calls(), result: .success(0))
         model.find = "x"

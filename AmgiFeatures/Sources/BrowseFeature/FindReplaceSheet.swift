@@ -47,10 +47,13 @@ struct FindReplaceSheet: View {
         }
     }
 
-    private var scope: String {
-        model.noteIDs.isEmpty
-            ? String(localized: "Applies to every note in the collection.")
-            : String(localized: "Applies to \(model.noteIDs.count) selected notes.")
+    @ViewBuilder
+    private var scope: some View {
+        if model.noteIDs.isEmpty {
+            Text("Applies to every note in the collection.")
+        } else {
+            Text("Applies to ^[\(model.noteIDs.count) selected note](inflect: true).")
+        }
     }
 
     private var inputSection: some View {
@@ -63,7 +66,7 @@ struct FindReplaceSheet: View {
                 .autocorrectionDisabled()
                 .textInputAutocapitalization(.never)
         } footer: {
-            Text(scope)
+            scope
         }
     }
 
@@ -85,7 +88,11 @@ struct FindReplaceSheet: View {
             Section {
                 switch outcome {
                 case .updated(let count):
-                    Label(String(localized: "\(count) notes updated"), systemImage: "checkmark.circle")
+                    Label {
+                        Text("^[\(count) note](inflect: true) updated")
+                    } icon: {
+                        Image(systemName: "checkmark.circle")
+                    }
                         .foregroundStyle(palette.textPrimary)
                 case .undone:
                     Label("Change undone", systemImage: "arrow.uturn.backward")

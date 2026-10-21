@@ -40,6 +40,11 @@ final class FindReplaceModel {
         self.noteIDs = noteIDs
     }
 
+    // The engine expands $1 / ${name} in the replacement even when regex is off.
+    private var literalSafeReplacement: String {
+        useRegex ? replacement : replacement.replacing("$", with: "$$")
+    }
+
     var canApply: Bool { !find.isEmpty && !isWorking }
 
     func loadFieldNames() async {
@@ -56,7 +61,7 @@ final class FindReplaceModel {
         defer { isWorking = false }
         do {
             let count = try await noteClient.findAndReplace(
-                noteIDs, find, replacement, useRegex, matchCase, fieldName
+                noteIDs, find, literalSafeReplacement, useRegex, matchCase, fieldName
             )
             outcome = .updated(count)
             canUndo = count > 0
