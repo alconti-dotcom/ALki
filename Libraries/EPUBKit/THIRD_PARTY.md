@@ -22,4 +22,4 @@ EPUBKit transitively depends on:
 - Upstream: https://github.com/ZipArchive/ZipArchive
 - License: MIT
 
-All three libraries are used in source / package form and are not modified. The one change to the vendored EPUBKit is in its `Package.swift`, which raises the iOS and tvOS minimum to 17 to match AEXML 4.7.3.
+AEXML and ZipArchive are SwiftPM dependencies, resolved from upstream and unmodified. The vendored EPUBKit is a modified fork: it uses ZipArchive instead of marmelroy/Zip, adds EPUB3 XHTML navigation and NCX-less spine support, hardens the NCX parser against missing attributes, drops the upstream test target, and raises the platform minimums to macOS 10.15 and iOS/tvOS 17 (required by AEXML ≥ 4.7.2).
