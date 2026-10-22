@@ -90,6 +90,25 @@ struct FindReplaceModelTests {
         #expect(calls.args.map(\.replacement) == ["$$5 $${1}", "$5 ${1}"])
     }
 
+    @Test func sameInputsCannotBeAppliedTwiceUntilChangedOrUndone() async {
+        let calls = Calls()
+        let model = makeModel(ids: [NoteID(1)], calls: calls)
+        model.find = "x"
+        await model.apply()
+        #expect(!model.canApply)
+        await model.apply()
+        #expect(calls.args.count == 1)
+        #expect(model.canUndo, "undo stays available while the inputs are unchanged")
+
+        model.matchCase = true
+        #expect(model.canApply)
+        model.matchCase = false
+        #expect(!model.canApply)
+
+        await model.undo()
+        #expect(model.canApply)
+    }
+
     @Test func zeroMatchesOffersNoUndo() async {
         let model = makeModel(ids: [], calls: Calls(), result: .success(0))
         model.find = "x"

@@ -45,7 +45,19 @@ final class FindReplaceModel {
         useRegex ? replacement : replacement.replacing("$", with: "$$")
     }
 
-    var canApply: Bool { !find.isEmpty && !isWorking }
+    private struct Inputs: Equatable {
+        let find, replacement, fieldName: String
+        let useRegex, matchCase: Bool
+    }
+
+    private var inputs: Inputs {
+        Inputs(find: find, replacement: replacement, fieldName: fieldName, useRegex: useRegex, matchCase: matchCase)
+    }
+
+    // Set after a successful run so the same inputs can't be applied twice; cleared by undo.
+    private var lastApplied: Inputs?
+
+    var canApply: Bool { !find.isEmpty && !isWorking && lastApplied != inputs }
 
     func loadFieldNames() async {
         guard !noteIDs.isEmpty else {
@@ -65,6 +77,7 @@ final class FindReplaceModel {
             )
             outcome = .updated(count)
             canUndo = count > 0
+            lastApplied = inputs
         } catch {
             // The engine wraps regex parse errors in <pre> tags.
             let message = error.localizedDescription
@@ -86,6 +99,7 @@ final class FindReplaceModel {
             outcome = .failed(error.localizedDescription)
         }
         canUndo = false
+        lastApplied = nil
     }
 
     private func wholeCollectionFieldNames() async throws -> [String] {
