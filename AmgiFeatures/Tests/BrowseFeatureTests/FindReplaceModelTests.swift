@@ -31,7 +31,7 @@ struct FindReplaceModelTests {
     }
 
     private func makeModel(
-        ids: [NoteID], calls: Calls, result: Result<Int, any Error> = .success(2)
+        ids: [NoteID], calls: Calls, result: Result<Int, any Error> = .success(2), undoFails: Bool = false
     ) -> FindReplaceModel {
         withDependencies {
             $0.noteClient.fieldNamesForNotes = { _ in ["Front", "Back"] }
@@ -39,7 +39,10 @@ struct FindReplaceModelTests {
                 calls.record(ids, s, r, re, mc, f)
                 return try result.get()
             }
-            $0.cardClient.undoLast = { calls.recordUndo() }
+            $0.cardClient.undoLast = {
+                calls.recordUndo()
+                if undoFails { throw CocoaError(.fileReadUnknown) }
+            }
             $0.notetypesClient.listAll = { [NotetypeNameId(id: NotetypeID(1), name: "Basic")] }
             $0.notetypesClient.get = { _ in
                 Notetype(id: NotetypeID(1), name: "Basic", fields: [
@@ -107,6 +110,18 @@ struct FindReplaceModelTests {
 
         await model.undo()
         #expect(model.canApply)
+    }
+
+    @Test func failedUndoKeepsReplaceBlocked() async {
+        let calls = Calls()
+        let model = makeModel(ids: [NoteID(1)], calls: calls, undoFails: true)
+        model.find = "x"
+        await model.apply()
+        await model.undo()
+        #expect(calls.undos == 1)
+        #expect(!model.canUndo)
+        #expect(!model.canApply, "the replace is still applied, so identical inputs must stay blocked")
+        if case .failed = model.outcome {} else { Issue.record("expected a failed outcome") }
     }
 
     @Test func zeroMatchesOffersNoUndo() async {

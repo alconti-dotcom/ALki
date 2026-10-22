@@ -95,11 +95,11 @@ final class FindReplaceModel {
         do {
             try await cardClient.undoLast()
             outcome = .undone
+            lastApplied = nil
         } catch {
             outcome = .failed(error.localizedDescription)
         }
         canUndo = false
-        lastApplied = nil
     }
 
     private func wholeCollectionFieldNames() async throws -> [String] {
