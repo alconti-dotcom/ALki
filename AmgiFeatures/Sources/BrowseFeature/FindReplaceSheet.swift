@@ -93,7 +93,7 @@ struct FindReplaceSheet: View {
                     } icon: {
                         Image(systemName: "checkmark.circle")
                     }
-                        .foregroundStyle(palette.textPrimary)
+                    .foregroundStyle(palette.textPrimary)
                 case .undone:
                     Label("Change undone", systemImage: "arrow.uturn.backward")
                         .foregroundStyle(palette.textSecondary)
