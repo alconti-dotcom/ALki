@@ -22,4 +22,4 @@ EPUBKit transitively depends on:
 - Upstream: https://github.com/ZipArchive/ZipArchive
 - License: MIT
 
-All three libraries are used in source / package form and are not modified.
+All three libraries are used in source / package form and are not modified. The one change to the vendored EPUBKit is in its `Package.swift`, which raises the iOS and tvOS minimum to 17 to match AEXML 4.7.3.
