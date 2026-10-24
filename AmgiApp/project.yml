@@ -158,6 +158,7 @@ targets:
           - "Widgets"
           - "Watch"
       - path: Resources/Assets.xcassets
+      - path: Resources/AppIcons
       - path: Resources/mathjax
         type: folder
       - path: Resources/Review
@@ -178,7 +179,10 @@ targets:
       base:
         INFOPLIST_FILE: Info.plist
         PRODUCT_BUNDLE_IDENTIFIER: com.amgiapp.AmgiApp
-        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        # Dojang.icon (Resources/AppIcons); iOS 18 gets actool's flat fallback.
+        ASSETCATALOG_COMPILER_APPICON_NAME: Dojang
+        # Ids must match AppIconOption.alternateName (AppIconOptionTests checks).
+        "ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES[sdk=iphone*]": "Handwritten DeepTeal Midnight Celadon Persimmon"
         CODE_SIGN_ENTITLEMENTS: AmgiApp.entitlements
         # Cxx interop chain. Xcode + SPM under Swift 6 needs an explicit
         # Clang C++ standard alongside SWIFT_CXX_INTEROPERABILITY_MODE —

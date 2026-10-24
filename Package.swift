@@ -124,7 +124,9 @@ let package = Package(
         .testTarget(
             name: "AnkiProtoBridgeTests",
             dependencies: ["AnkiProtoBridge", "AnkiProto", "AnkiServices"],
-            resources: [.copy("Fixtures/MediaSync")],
+            // Read from disk via `#filePath`, like the other source-scanning
+            // tests here — not a bundle resource.
+            exclude: ["Fixtures"],
             swiftSettings: sharedSwiftSettings
         ),
         // MARK: - Libraries
