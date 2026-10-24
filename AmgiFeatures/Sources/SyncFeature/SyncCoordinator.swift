@@ -190,6 +190,42 @@ package final class SyncCoordinator {
         activeTask = task
     }
 
+    func mergeFullSync() async {
+        guard case .needsFullSync = state else {
+            appendLog("Cannot merge — not in needsFullSync state", level: .warning)
+            return
+        }
+
+        state = .syncing(message: "Preparing merge...")
+        appendLog("Merge started")
+
+        let task = Task { [weak self] in
+            guard let self else { return }
+            let client = self.syncClient
+            do {
+                try await client.merge { message in
+                    Task { @MainActor in
+                        guard case .syncing = self.state else { return }
+                        self.state = .syncing(message: message)
+                    }
+                }
+                let mediaFailure = try await self.awaitMediaCompletion(using: client)
+                self.lastSyncedAtUnix = Date().timeIntervalSince1970
+                self.needsFullSyncFlag = false
+                self.activeTask = nil
+                self.isCancelling = false
+                self.report(mediaFailure: mediaFailure, otherwise: SyncSummary())
+                await writeWidgetSnapshot()
+            } catch {
+                self.activeTask = nil
+                guard !self.finishCancellationIfNeeded() else { return }
+                self.appendLog("Merge failed: \(error.localizedDescription)", level: .error)
+                self.state = .error(error.localizedDescription)
+            }
+        }
+        activeTask = task
+    }
+
     func signOut() async {
         cancel()
         KeychainHelper.deleteEndpoint()
