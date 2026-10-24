@@ -18,13 +18,6 @@
   "testTargets" : [
     {
       "target" : {
-        "containerPath" : "container:../AmgiFeatures",
-        "identifier" : "WidgetFeatureTests",
-        "name" : "WidgetFeatureTests"
-      }
-    },
-    {
-      "target" : {
         "containerPath" : "container:AmgiApp.xcodeproj",
         "identifier" : "EE6CF1FAA191BC2F0404B752",
         "name" : "AmgiAppTests"
@@ -105,6 +98,13 @@
         "containerPath" : "container:../AmgiFeatures",
         "identifier" : "SyncFeatureTests",
         "name" : "SyncFeatureTests"
+      }
+    },
+    {
+      "target" : {
+        "containerPath" : "container:../AmgiFeatures",
+        "identifier" : "WidgetFeatureTests",
+        "name" : "WidgetFeatureTests"
       }
     },
     {
