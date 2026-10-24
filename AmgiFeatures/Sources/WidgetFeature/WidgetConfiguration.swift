@@ -28,11 +28,11 @@ struct DeckEntityQuery: EntityQuery {
     func entities(for identifiers: [String]) async throws -> [DeckEntity] {
         let snapshots = self.snapshots()
         return identifiers.compactMap { id in
-            guard Int64(id) != nil else { return nil }
-            // Keep saved/default identifiers resolvable even before the first
-            // snapshot or after a profile switch. The provider handles fallback.
-            let snapshot = snapshots.first { String($0.deckId) == id }
-            return DeckEntity(id: id, name: snapshot?.deckName ?? "All Decks")
+            if let snapshot = snapshots.first(where: { String($0.deckId) == id }) {
+                return DeckEntity(id: id, name: snapshot.deckName)
+            }
+            // defaultResult() hands out "0" before the first snapshot exists.
+            return id == "0" ? DeckEntity(id: "0", name: "All Decks") : nil
         }
     }
 
