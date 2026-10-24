@@ -1,3 +1,4 @@
+#if os(iOS)
 import Dependencies
 import Foundation
 import Reader
@@ -80,3 +81,4 @@ private actor PendingLookups {
         }
     }
 }
+#endif
