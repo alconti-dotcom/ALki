@@ -99,27 +99,27 @@ struct DictionaryPopupPathTests {
 
 extension DictionaryPopupPathTests {
     @Test(arguments: [1, 2, 16], [false, true])
-    func verticalEPUBUsesJitendexAcrossDictionaryOrders(scanLength: Int, reversed: Bool) async throws {
+    func verticalEPUBLookupFollowsDictionaryOrder(scanLength: Int, reversed: Bool) async throws {
         let profileID = "epub-path-" + UUID().uuidString
         let directory = try #require(FileManager.default.urls(
             for: .applicationSupportDirectory, in: .userDomainMask
         ).first).appendingPathComponent("ReaderDictionaries").appendingPathComponent(profileID)
         defer { try? FileManager.default.removeItem(at: directory) }
         let runtime = DictionaryLookupRuntime(configStore: .testValue, profileID: profileID)
-        for name in ["scan-length", "jitendex-scan-subset"] {
+        for name in ["scan-length", "scan-order"] {
             let archive = try #require(Bundle(for: DictionaryPopupFixture.self)
                 .url(forResource: name, withExtension: "zip"))
             _ = try await runtime.importArchive(at: archive, kind: .term, requiresSecurityScope: false)
         }
         let state = try await runtime.loadState()
         #expect(state.termDictionaries.count == 2)
-        let ids = state.termDictionaries.map(\.id)
-        _ = try await runtime.reorder(kind: .term, dictionaryIDs: reversed ? Array(ids.reversed()) : ids)
+        let ordered = reversed ? Array(state.termDictionaries.reversed()) : state.termDictionaries
+        _ = try await runtime.reorder(kind: .term, dictionaryIDs: ordered.map(\.id))
         let suite = "epub-prefs-" + UUID().uuidString
         let preferences = try #require(UserDefaults(suiteName: suite))
         defer { preferences.removePersistentDomain(forName: suite) }
         preferences.set(scanLength, forKey: ReaderPreferences.Keys.dictionaryScanLength)
-        preferences.set(1, forKey: ReaderPreferences.Keys.dictionaryMaxResults)
+        preferences.set(2, forKey: ReaderPreferences.Keys.dictionaryMaxResults)
         let chapter = directory.appendingPathComponent("chapter.xhtml")
         try "<html xmlns=\"http://www.w3.org/1999/xhtml\"><head><title>Lookup</title></head><body><p>先生は来た。</p></body></html>"
             .write(to: chapter, atomically: true, encoding: .utf8)
@@ -178,6 +178,12 @@ extension DictionaryPopupPathTests {
         #expect(matched == expected)
         #expect(controller.presentedViewController is UIHostingController<LookupPopupView>)
         controller.dismiss(animated: false)
+
+        // Each dictionary holds a distinct same-length match, so only dictionary order picks the first entry.
+        let result = try await runtime.lookup(try #require(tappedQuery), maxResults: 2, scanLength: scanLength)
+        #expect(result.entries.count == 2)
+        #expect(Set(result.entries.compactMap { $0.structuredGlossaries.first?.dictionary }).count == 2)
+        #expect(result.entries.first?.structuredGlossaries.first?.dictionary == ordered.first?.title)
     }
 }
 
