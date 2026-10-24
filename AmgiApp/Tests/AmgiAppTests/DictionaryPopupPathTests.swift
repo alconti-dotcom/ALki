@@ -120,12 +120,15 @@ extension DictionaryPopupPathTests {
         defer { preferences.removePersistentDomain(forName: suite) }
         preferences.set(scanLength, forKey: ReaderPreferences.Keys.dictionaryScanLength)
         preferences.set(2, forKey: ReaderPreferences.Keys.dictionaryMaxResults)
-        let chapter = directory.appendingPathComponent("chapter.xhtml")
+        let pageDirectory = FileManager.default.temporaryDirectory.appendingPathComponent(profileID)
+        try FileManager.default.createDirectory(at: pageDirectory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: pageDirectory) }
+        let chapter = pageDirectory.appendingPathComponent("chapter.xhtml")
         try "<html xmlns=\"http://www.w3.org/1999/xhtml\"><head><title>Lookup</title></head><body><p>先生は来た。</p></body></html>"
             .write(to: chapter, atomically: true, encoding: .utf8)
         let controller = EPUBChapterPageController(
             chapterIndex: 0,
-            content: EPUBChapterContent(chapterID: 1, contentURL: chapter, readAccessURL: directory),
+            content: EPUBChapterContent(chapterID: 1, contentURL: chapter, readAccessURL: pageDirectory),
             styleTokens: EPUBReaderStyleTokens(verticalMode: true, scanLength: scanLength),
             pendingRestoreFraction: nil
         )
