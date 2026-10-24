@@ -69,7 +69,7 @@ struct MediaSyncLiveTests {
                 $0.ankiBackend = backend
             } operation: {
                 let service = SyncService.liveValue
-                try await service.fullSync(server.endpoint, "fixture-key", direction)
+                try await service.fullSync(server.endpoint, "fixture-key", direction, true)
                 try await waitForMedia(service)
             }
             #expect(server.consumedAllResponses)
