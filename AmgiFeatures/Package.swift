@@ -394,6 +394,7 @@ let package = Package(
                 .product(name: "SwiftUINavigation", package: "swift-navigation"),
                 .product(name: "CasePaths", package: "swift-case-paths"),
             ],
+            resources: [.process("Resources")],
             swiftSettings: sharedSwiftSettings
         ),
         // Everything the watchOS app renders: its content root, deck list,
