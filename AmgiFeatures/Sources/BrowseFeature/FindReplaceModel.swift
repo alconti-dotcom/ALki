@@ -71,13 +71,14 @@ final class FindReplaceModel {
         guard canApply else { return }
         isWorking = true
         defer { isWorking = false }
+        let applied = inputs
         do {
             let count = try await noteClient.findAndReplace(
                 noteIDs, find, literalSafeReplacement, useRegex, matchCase, fieldName
             )
             outcome = .updated(count)
             canUndo = count > 0
-            lastApplied = inputs
+            lastApplied = applied
         } catch {
             // The engine wraps regex parse errors in <pre> tags.
             let message = error.localizedDescription

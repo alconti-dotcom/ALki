@@ -112,6 +112,25 @@ struct FindReplaceModelTests {
         #expect(model.canApply)
     }
 
+    @Test func editingDuringApplyRecordsTheInputsThatRan() async {
+        final class Box: @unchecked Sendable { var model: FindReplaceModel? }
+        let box = Box()
+        let model = withDependencies {
+            $0.noteClient.findAndReplace = { _, _, _, _, _, _ in
+                await MainActor.run { box.model?.find = "dog" }
+                return 1
+            }
+        } operation: {
+            FindReplaceModel(noteIDs: [NoteID(1)])
+        }
+        box.model = model
+        model.find = "cat"
+        await model.apply()
+        #expect(model.canApply, "\"dog\" never ran")
+        model.find = "cat"
+        #expect(!model.canApply)
+    }
+
     @Test func failedUndoKeepsReplaceBlocked() async {
         let calls = Calls()
         let model = makeModel(ids: [NoteID(1)], calls: calls, undoFails: true)
