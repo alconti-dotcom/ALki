@@ -606,7 +606,7 @@ function splitAudioQueue() {
     };
 }
 function amgiStartTts(btn, requestID, finished) {
-    amgiPendingTts = { requestID: requestID, finished: finished };
+    amgiPendingTts = { requestID: requestID, finished: finished, btn: btn };
     // The native delegate reports speech state; keep the web replay state in sync.
     window.__amgiAudioPlaying = true;
     try {
@@ -663,10 +663,11 @@ function replaySequential(queue) {
     playNext();
 }
 window.amgiTtsFinished = function(requestID) {
-    if (!amgiPendingTts || amgiPendingTts.requestID !== requestID) return;
+    if (!amgiPendingTts || amgiPendingTts.requestID !== requestID) return false;
     var finished = amgiPendingTts.finished;
     amgiPendingTts = null;
     finished();
+    return true;
 };
 function amgiReplayAll(mode) {
     if (amgiHasTemplateManagedMedia()) return;
@@ -737,6 +738,7 @@ window.open = function(url) { postOpenLink(url); return null; };
 // ===== TTS =====
 function amgiSpeakTts(btn) {
     if (!btn) return false;
+    if (amgiPendingTts && amgiPendingTts.btn === btn) { stopAllSystemAudio(); return false; }
     replaySequential([btn]);
     return false;
 }
