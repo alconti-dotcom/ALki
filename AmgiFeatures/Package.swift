@@ -148,6 +148,8 @@ let package = Package(
             name: "StatsFeatureTests",
             dependencies: [
                 "StatsFeature",
+                "StatsCharts",
+                .product(name: "Theme", package: "AmgiUI"),
                 .product(name: "AnkiKit", package: "amgi"),
                 .product(name: "AnkiClients", package: "amgi"),
                 .product(name: "Dependencies", package: "swift-dependencies"),
