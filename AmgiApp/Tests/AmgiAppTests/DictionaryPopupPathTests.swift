@@ -39,11 +39,13 @@ struct DictionaryPopupPathTests {
         defer { window.isHidden = true }
         var matched: String?
         var tappedQuery: String?
+        var tapCount = 0
         let card = CardWebView(
             html: "<p><ruby>先生<rt>せんせい</rt></ruby>は来た。</p>",
             autoplayEnabled: false, lookupPopupEnabled: true,
             dictionaryScanLength: preferences.integer(forKey: ReaderPreferences.Keys.dictionaryScanLength),
             onLookupRequested: { query, sentence, _ in
+                tapCount += 1
                 tappedQuery = query
                 guard let query else { return }
                 let popup = withDependencies {
@@ -80,6 +82,8 @@ struct DictionaryPopupPathTests {
                 }));
             })()
             """)
+        try #require(try await wait { tapCount > 0 })
+        try #require(tappedQuery != nil)
         try #require(try await wait { matched != nil })
         let expected = scanLength == 1 ? "先" : "先生"
         #expect(tappedQuery?.hasPrefix(expected) == true)
@@ -99,7 +103,7 @@ struct DictionaryPopupPathTests {
 
 extension DictionaryPopupPathTests {
     @Test(arguments: [1, 2, 16], [false, true])
-    func verticalEPUBLookupFollowsDictionaryOrder(scanLength: Int, reversed: Bool) async throws {
+    func verticalEPUBLookupAndDictionaryOrder(scanLength: Int, reversed: Bool) async throws {
         let profileID = "epub-path-" + UUID().uuidString
         let directory = try #require(FileManager.default.urls(
             for: .applicationSupportDirectory, in: .userDomainMask
@@ -140,7 +144,9 @@ extension DictionaryPopupPathTests {
         defer { window.isHidden = true }
         var matched: String?
         var tappedQuery: String?
+        var tapCount = 0
         let delegate = EPUBLookupProbe { query, sentence in
+            tapCount += 1
             tappedQuery = query
             let popup = withDependencies {
                 $0.defaultAppStorage = preferences
@@ -175,6 +181,8 @@ extension DictionaryPopupPathTests {
             })()
             """) as? Bool
         try #require(tappedVisibleText == true)
+        try #require(try await wait { tapCount > 0 })
+        try #require(tappedQuery != nil)
         try #require(try await wait { matched != nil })
         let expected = scanLength == 1 ? "先" : "先生"
         #expect(tappedQuery?.hasPrefix(expected) == true)
