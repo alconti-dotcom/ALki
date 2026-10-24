@@ -25,8 +25,18 @@ extension DeckConfigModel {
     }
 
     func formatSteps(_ values: [Float]) -> String {
-        guard !values.isEmpty else { return "" }
-        return values.map { "\($0)m".replacingOccurrences(of: ".0m", with: "m") }.joined(separator: " ")
+        values.map(formatStep).joined(separator: " ")
+    }
+
+    private func formatStep(_ step: Float) -> String {
+        let fallback = "\(step)m".replacingOccurrences(of: ".0m", with: "m")
+        let secs = (Double(step) * 60).rounded()
+        guard secs > 0, secs < 2_147_483_648 else { return fallback }
+        let whole = Int(secs)
+        let (size, suffix) = [(86_400, "d"), (3600, "h"), (60, "m"), (1, "s")].first { whole % $0.0 == 0 }!
+        let text = "\(whole / size)\(suffix)"
+        // Exact round-trip only: rslib recomputes in-progress cards' remaining steps when the saved steps differ.
+        return parseSteps(text) == [step] ? text : fallback
     }
 
     func parseFloats(_ text: String) -> [Float] {

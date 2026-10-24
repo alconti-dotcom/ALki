@@ -27,9 +27,16 @@ struct DeckConfigStepsTests {
 
     @Test func formattingPreservesFloatPrecision() {
         let model = model()
-        let steps: [Float] = [1 / 60, 0.5, 1.5, 10]
+        let steps: [Float] = [1 / 60, 20 / 60, 0.5, 1.5, 10, 0.123, 1 / 120]
         #expect(model.parseSteps(model.formatSteps(steps)) == steps)
         #expect(model.formatSteps([1, 10]) == "1m 10m")
+    }
+
+    @Test func formattingUsesTheLargestWholeUnitLikeDesktop() {
+        let model = model()
+        #expect(model.formatSteps([0.5, 1.5, 20 / 60, 1, 10, 60, 90, 1440, 1500, 2880]) == "30s 90s 20s 1m 10m 1h 90m 1d 25h 2d")
+        #expect(model.formatSteps([0.123, 0]) == "0.123m 0m")
+        #expect(model.formatSteps([2_097_153]) == "2097153m")
     }
 
     @Test func emptyStepsRemainEmpty() {
