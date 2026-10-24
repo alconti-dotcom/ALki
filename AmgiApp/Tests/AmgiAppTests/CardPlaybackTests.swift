@@ -161,7 +161,7 @@ struct CardPlaybackTests {
                 const finish = window.amgiTtsFinished;
                 window.amgiTtsFinished = function(id) {
                     window.completedPlayback.push('tts');
-                    finish(id);
+                    return finish(id);
                 };
                 document.querySelector('#amgi-audio-queue-player').addEventListener('ended', () => window.completedPlayback.push('sound'));
                 amgiReplayAll('question');
