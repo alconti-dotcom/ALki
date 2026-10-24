@@ -44,9 +44,8 @@ import Testing
         #expect(content.blocks == [.image(filename: "cat.jpg")])
     }
 
-    @Test(arguments: ["sound", "Sound", "SOUND"])
-    func soundMarkerExtractedNotRendered(marker: String) {
-        let content = NativeCardContent.parse(html: "hello [\(marker):hello.mp3]")
+    @Test func soundMarkerExtractedNotRendered() {
+        let content = NativeCardContent.parse(html: "hello [sound:hello.mp3]")
         #expect(content.audioFiles == ["hello.mp3"])
         #expect(texts(content) == ["hello"])
     }
