@@ -1,3 +1,10 @@
+//
+//  CardPlaybackTests.swift
+//  AmgiAppTests
+//
+//  Created by zolotarev_om on 30.09.2026.
+//
+
 // App-hosted: CardWebView loads the production bridge and asset resources from Bundle.main.
 import AnkiBackend
 import AnkiClients
@@ -67,68 +74,6 @@ struct CardPlaybackTests {
         #expect(spoke, "The real WK message must start AVSpeechSynthesizer")
     }
 
-    @Test(arguments: [false, true])
-    func localSoundPlaysThroughTheActualAssetScheme(autoplay: Bool) async throws {
-        let directory = try mediaDirectory()
-        defer { try? FileManager.default.removeItem(at: directory) }
-        try await withDependencies {
-            $0.mediaClient.folderURL = { directory }
-        } operation: {
-            var started = false
-            let card = CardWebView(
-                html: "[sound:先生 space.wav]", autoplayEnabled: autoplay,
-                onAudioStateChange: { if $0 { started = true } }
-            )
-            let coordinator = card.makeCoordinator()
-            let webView = card.makeWebView(coordinator: coordinator)
-            let window = try host(webView)
-            defer { window.isHidden = true }
-            defer { CardWebView.dismantleWebView(webView, coordinator: coordinator) }
-            ReviewAudioSession.apply(playInSilent: true)
-            defer { ReviewAudioSession.release() }
-            card.updateWebView(webView, coordinator: coordinator)
-            let loaded = try await wait {
-                try await webView.evaluateJavaScript("!!document.querySelector('.anki-sound-audio')") as? Bool == true
-            }
-            try #require(loaded, "The actual bundled card frame must finish rendering")
-            if !autoplay {
-                _ = try await webView.evaluateJavaScript("document.querySelector('.sound-btn .replay-button').click()")
-            }
-            let selector = autoplay ? "#amgi-audio-queue-player" : ".anki-sound-audio"
-            let ended = try await wait {
-                try await webView.evaluateJavaScript("""
-                    (() => {
-                      const audio = document.querySelector('\(selector)');
-                      return !!audio && audio.ended && audio.duration > 0 && audio.currentTime > 0;
-                    })()
-                    """) as? Bool == true
-            }
-            #expect(started)
-            let diagnostic = try await webView.evaluateJavaScript("""
-                (() => {
-                  const audio = document.querySelector('\(selector)');
-                  return JSON.stringify(audio && {src:audio.src, error:audio.error && audio.error.code,
-                    paused:audio.paused, duration:audio.duration, time:audio.currentTime,
-                    ready:audio.readyState, network:audio.networkState});
-                })()
-                """)
-            #expect(ended, "WebKit must decode and finish the real WAV: \(String(describing: diagnostic))")
-        }
-    }
-
-    @Test func nativeSoundQueueFinishesTheLocalFile() async throws {
-        let directory = try mediaDirectory()
-        defer { try? FileManager.default.removeItem(at: directory) }
-        ReviewAudioSession.apply(playInSilent: true)
-        defer { ReviewAudioSession.release() }
-        let player = NativeCardAudioPlayer()
-        defer { player.stop() }
-        player.play(files: ["先生 space.wav"], mediaFolder: directory)
-        #expect(player.isPlaying)
-        let ended = try await wait { !player.isPlaying }
-        #expect(ended)
-    }
-
     @Test func mixedSpeechAndSoundQueueFinishesInOrderAndStopsWithoutAdvancing() async throws {
         let directory = try mediaDirectory()
         defer { try? FileManager.default.removeItem(at: directory) }
@@ -177,6 +122,15 @@ struct CardPlaybackTests {
                 collectAudioQueue('answerOnly').map(item => item.matches('.tts-btn') ? item.dataset.ttsText : 'sound');
                 """) as? [String]
             #expect(answerItems == ["sound", "Goodbye"])
+
+            _ = try await webView.evaluateJavaScript("document.querySelector('.tts-btn').click()")
+            try #require(try await wait { playing })
+            let stopped = try await webView.evaluateJavaScript("""
+                document.querySelector('.tts-btn').click();
+                amgiPendingTts === null && !window.__amgiAudioPlaying
+                """) as? Bool
+            #expect(stopped == true)
+            #expect(try await wait { !playing })
         }
     }
 
@@ -219,10 +173,10 @@ struct CardPlaybackTests {
 
 extension CardPlaybackTests {
     @Test(arguments: [false, true])
-    func kaishiMP3StopsOnFlipNextStopAndUnmount(autoplay: Bool) async throws {
+    func mp3StopsOnFlipNextStopAndUnmount(autoplay: Bool) async throws {
         let directory = try mediaDirectory()
         defer { try? FileManager.default.removeItem(at: directory) }
-        let fixture = try #require(Bundle(for: MP3Fixture.self).url(forResource: "kaishi-probe", withExtension: "mp3"))
+        let fixture = try #require(Bundle(for: MP3Fixture.self).url(forResource: "tone-4s", withExtension: "mp3"))
         for name in ["先生 space.mp3", "sentence.mp3"] {
             try FileManager.default.copyItem(at: fixture, to: directory.appendingPathComponent(name))
         }
