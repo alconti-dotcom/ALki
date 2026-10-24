@@ -110,6 +110,7 @@ struct DispatchTableTests {
         Method(ServiceID.search, SearchMethod.searchCards, "search_cards"),
         Method(ServiceID.search, SearchMethod.searchNotes, "search_notes"),
         // backend_sync_service (1)
+        Method(ServiceID.sync, SyncMethod.syncMedia, "sync_media"),
         Method(ServiceID.sync, SyncMethod.abortMediaSync, "abort_media_sync"),
         Method(ServiceID.sync, SyncMethod.mediaSyncStatus, "media_sync_status"),
         Method(ServiceID.sync, SyncMethod.syncLogin, "sync_login"),
